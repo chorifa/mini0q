@@ -1,4 +1,4 @@
-package com.chorifa.mini0q.core.provider;
+package com.chorifa.mini0q.core.producer;
 
 import com.chorifa.mini0q.core.AtomicLong;
 import com.chorifa.mini0q.core.wait.WaitStrategy;
@@ -8,7 +8,7 @@ import com.chorifa.mini0q.utils.Util;
 
 import java.util.concurrent.locks.LockSupport;
 
-public class SingleProviderSequencer extends AbstractSequencer {
+public class SingleProducerSequencer extends AbstractSequencer {
 
     private long p1,p2,p3,p4,p5,p6,p7;
     //@Contended(value = "pos")
@@ -17,7 +17,7 @@ public class SingleProviderSequencer extends AbstractSequencer {
     private long cachedMinConsumerPos = AtomicLong.INITIAL_VALUE;
     private long p8,p9,p10,p11,p12,p13,p14;
 
-    public SingleProviderSequencer(int bufferSize, WaitStrategy strategy) {
+    public SingleProducerSequencer(int bufferSize, WaitStrategy strategy) {
         super(bufferSize, strategy);
     }
 

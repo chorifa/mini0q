@@ -6,7 +6,7 @@ import com.chorifa.mini0q.core.RingQueue;
 import com.chorifa.mini0q.core.consumer.EventHandler;
 import com.chorifa.mini0q.core.event.EventFactory;
 import com.chorifa.mini0q.core.event.EventTranslator;
-import com.chorifa.mini0q.core.provider.ProducerType;
+import com.chorifa.mini0q.core.producer.ProducerType;
 import com.chorifa.mini0q.utils.CoreException;
 import com.chorifa.mini0q.utils.Util;
 import org.junit.Test;

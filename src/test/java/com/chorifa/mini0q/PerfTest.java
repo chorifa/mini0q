@@ -13,16 +13,32 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.locks.LockSupport;
 
 public class PerfTest {
 
     /**
+     * no rest
      * 10 consumer, 10 producer * (1000*100) >>>> maxPeriod : 608ms / 680ms (both c or p)
-     * 10 consumer, 10 producer * (1000*1000) >>> maxPeriod : 8046ms / 7801ms / 7050ms / 7405ms (both c or p)
+     * 10 consumer, 10 producer * (1000*1000) >>> maxPeriod : 7526ms (both c or p)
      *  5 consumer,  5 producer * (1000*1000) >>> maxPeriod : 2151ms / 2099ms (both c or p)
      *  3 consumer,  3 producer * (1000*1000) >>> maxPeriod : 1368ms / 1174ms (both c or p)
      *  2 consumer,  2 producer * (1000*1000) >>> maxPeriod : 585ms (both c or p)
      *  1 consumer,  1 producer * (1000*1000) >>> maxPeriod : 369ms / 344ms (both c or p)
+     *  1 consumer,  3 producer * (1000*1000) >>> maxPeriod : 1437ms (both c or p)
+     *  3 consumer,  1 producer * (1000*1000) >>> maxPeriod : 655ms (both c or p)
+     *  3 consumer,  1 producer * (1000*1000*10) >>> maxPeriod : 4800ms (both c or p)
+     *
+     *  30 consumer, 10 producer * (1000)   >>> maxPeriod : 52ms (both c or p)
+     *  10 consumer, 100 producer * (1000*10) >>> maxPeriod : 1859ms (both c or p)
+     *  10 consumer, 100 producer * (1000*100) >>> maxPeriod : 20617ms (both c or p)
+     *  ----------------------------------------------------------------------------------
+     *  has rest (1us for each put)
+     *  10 consumer, 10 producer * (1000*1000) >>> maxPeriod : 70850ms / 63653ms (both c or p)
+     *  2 consumer,  2 producer * (1000*1000) >>> maxPeriod : 62807ms (both c or p)
+     *  ----------------------------------------------------------------------------------
+     *  1000 loop
+     *  10 consumer, 10 producer * (1000*1000) >>> maxPeriod : 48226ms / ms (both c or p)
      */
     @Test
     public void testArrayBlockingQueue(){
@@ -60,12 +76,27 @@ public class PerfTest {
     }
 
     /**
+     * no rest
      * 10 consumer, 10 producer * (1000*100) >>>> maxPeriod : 750ms (both c or p)
-     * 10 consumer, 10 producer * (1000*1000) >>> maxPeriod : 7230ms (both c or p)
+     * 10 consumer, 10 producer * (1000*1000) >>> maxPeriod : 6766ms (both c or p)
      *  5 consumer,  5 producer * (1000*1000) >>> maxPeriod : 2286ms (both c or p)
      *  3 consumer,  3 producer * (1000*1000) >>> maxPeriod : 699ms (both c or p)
      *  2 consumer,  2 producer * (1000*1000) >>> maxPeriod : 416ms (both c or p)
      *  1 consumer,  1 producer * (1000*1000) >>> maxPeriod : 161ms (both c or p)
+     *  1 consumer,  3 producer * (1000*1000) >>> maxPeriod : 577ms (both c or p)
+     *  3 consumer,  1 producer * (1000*1000) >>> maxPeriod : 234ms (both c or p)
+     *  3 consumer,  1 producer * (1000*1000*10) >>> maxPeriod : 2088ms (both c or p)
+     *
+     *  30 consumer, 10 producer * (1000)   >>> maxPeriod : 42ms (both c or p)
+     *  10 consumer, 100 producer * (1000*10) >>> maxPeriod : 1340ms (both c or p)
+     *  10 consumer, 100 producer * (1000*100) >>> maxPeriod : 13823ms (both c or p)
+     *  ----------------------------------------------------------------------------------
+     *  has rest (1us for each publish)
+     *  10 consumer, 10 producer * (1000*1000) >>> maxPeriod : 56410ms / 54580ms (both c or p)
+     *  2 consumer, 2 producer * (1000*1000) >>> maxPeriod : 62483ms (both c or p)
+     *  ----------------------------------------------------------------------------------
+     *  1000 loop
+     *  10 consumer, 10 producer * (1000*1000) >>> maxPeriod : 48519ms / ms (both c or p)
      */
     @Test
     public void testRingQueueBlockingWait(){
@@ -101,7 +132,9 @@ public class PerfTest {
     /**
      * 10 consumer, 10 producer (1000*1000) >>> maxPeriod4Producer : 8809ms / 7185ms / 6550ms (p only)
      * 5 consumer, 5 producer (1000*1000) >>>>> maxPeriod4Producer : 2276ms / 2481ms (p only)
-     * 2 consumer, 2 producer (1000*1000) >>>>> maxPeriod4Producer : 519ms (p only)
+     * 2 consumer, 2 producer (1000*1000) >>>>> maxPeriod4Producer : 497ms (p only)
+     * 1 consumer, 3 producer (1000*1000) >>>>> maxPeriod4Producer : 565ms (p only)
+     * 3 consumer, 1 producer (1000*1000) >>>>> maxPeriod4Producer : 592ms (p only)
      */
     @Test
     public void testDisruptor(){
@@ -192,6 +225,10 @@ public class PerfTest {
                 startTime = System.currentTimeMillis();
                 while (loop-->0) {
                     queue.put((int)loop);
+//                    for(int j = 0; j < 1000; j++){
+//                        System.currentTimeMillis();
+//                    }
+//                    LockSupport.parkNanos(1000L); // 1us
                     endTime = System.currentTimeMillis();
                 }
                 if(startTime > 0 && loop == -1) {
@@ -260,6 +297,15 @@ public class PerfTest {
                 startTime = System.currentTimeMillis();
                 while (loop-->0) {
                     manager.publishEvent(translator);
+//                    try {
+//                        Thread.sleep(0,1000); // actually, will sleep millis++ ms
+//                    }catch (InterruptedException ignore){
+//                        ;
+//                    }
+//                    for(int j = 0; j < 1000; j++){
+//                        System.currentTimeMillis();
+//                    }
+//                    LockSupport.parkNanos(1000L); // 1us
                 }
                 endTime = System.currentTimeMillis();
                 if(startTime > 0 && loop == -1) {
@@ -289,12 +335,13 @@ public class PerfTest {
             long startTime = -1, endTime = -1;
             long loop = App.products;
             try {
-                int i = 10000;
-                while (i > 0) i--;
+//                int i = 10000;
+//                while (i > 0) i--;
                 App.latch.await();
                 startTime = System.currentTimeMillis();
                 while (loop-->0) {
                     disruptor.publishEvent(translator4Disruptor);
+//                    LockSupport.parkNanos(1000L); // 1us
                     endTime = System.currentTimeMillis();
                 }
                 if(startTime > 0 && loop == -1) {

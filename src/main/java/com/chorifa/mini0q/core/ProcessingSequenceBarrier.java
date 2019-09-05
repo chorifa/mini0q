@@ -1,6 +1,6 @@
 package com.chorifa.mini0q.core;
 
-import com.chorifa.mini0q.core.provider.Sequencer;
+import com.chorifa.mini0q.core.producer.Sequencer;
 import com.chorifa.mini0q.core.wait.WaitStrategy;
 import com.chorifa.mini0q.utils.AlertException;
 import com.chorifa.mini0q.utils.TimeoutException;

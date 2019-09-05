@@ -8,7 +8,7 @@ import com.chorifa.mini0q.core.wait.WaitStrategy;
 import com.chorifa.mini0q.core.consumer.BatchEventProcessor;
 import com.chorifa.mini0q.core.consumer.ConcurrentProcessorPool;
 import com.chorifa.mini0q.core.consumer.EventHandler;
-import com.chorifa.mini0q.core.provider.ProducerType;
+import com.chorifa.mini0q.core.producer.ProducerType;
 import com.chorifa.mini0q.utils.Assert;
 import com.chorifa.mini0q.utils.CoreException;
 

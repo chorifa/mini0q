@@ -1,4 +1,4 @@
-package com.chorifa.mini0q.core.provider;
+package com.chorifa.mini0q.core.producer;
 
 import com.chorifa.mini0q.core.*;
 import com.chorifa.mini0q.core.wait.WaitStrategy;

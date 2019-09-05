@@ -1,4 +1,4 @@
-package com.chorifa.mini0q.core.provider;
+package com.chorifa.mini0q.core.producer;
 
 import com.chorifa.mini0q.core.AtomicLong;
 import com.chorifa.mini0q.core.wait.WaitStrategy;
@@ -11,7 +11,7 @@ import java.lang.invoke.VarHandle;
 import java.util.Arrays;
 import java.util.concurrent.locks.LockSupport;
 
-public class MultiProviderSequencer extends AbstractSequencer {
+public class MultiProducerSequencer extends AbstractSequencer {
 
 //    private static final Unsafe UNSAFE = Util.getUnsafe();
 //    private static final long BASE = UNSAFE.arrayBaseOffset(int[].class);
@@ -33,7 +33,7 @@ public class MultiProviderSequencer extends AbstractSequencer {
     private final int indexMask;
     private final int indexShift;
 
-    public MultiProviderSequencer(int bufferSize, WaitStrategy strategy) {
+    public MultiProducerSequencer(int bufferSize, WaitStrategy strategy) {
         super(bufferSize, strategy);
         // note cannot use parameter, caz may have be modify
         this.availableRef = new int[this.bufferSize];

@@ -3,7 +3,7 @@ package com.chorifa.mini0q.core.consumer;
 import com.chorifa.mini0q.core.AtomicLong;
 import com.chorifa.mini0q.core.RingQueue;
 import com.chorifa.mini0q.core.SequenceBarrier;
-import com.chorifa.mini0q.core.provider.Sequencer;
+import com.chorifa.mini0q.core.producer.Sequencer;
 import com.chorifa.mini0q.utils.CoreException;
 
 import java.util.concurrent.Executor;

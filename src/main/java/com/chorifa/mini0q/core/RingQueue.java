@@ -1,10 +1,10 @@
 package com.chorifa.mini0q.core;
 
 import com.chorifa.mini0q.core.event.*;
-import com.chorifa.mini0q.core.provider.MultiProviderSequencer;
-import com.chorifa.mini0q.core.provider.ProducerType;
-import com.chorifa.mini0q.core.provider.Sequencer;
-import com.chorifa.mini0q.core.provider.SingleProviderSequencer;
+import com.chorifa.mini0q.core.producer.MultiProducerSequencer;
+import com.chorifa.mini0q.core.producer.ProducerType;
+import com.chorifa.mini0q.core.producer.Sequencer;
+import com.chorifa.mini0q.core.producer.SingleProducerSequencer;
 import com.chorifa.mini0q.core.wait.BlockingWaitStrategy;
 import com.chorifa.mini0q.core.wait.WaitStrategy;
 import com.chorifa.mini0q.utils.Assert;
@@ -82,12 +82,12 @@ public final class RingQueue<E> extends RingQueueField<E> implements EventSequen
     /* *************************************** static create methods *************************************** */
 
     public static <E> RingQueue<E> createMultiProducer(EventFactory<E> factory, int bufferSize, WaitStrategy waitStrategy){
-        MultiProviderSequencer sequencer = new MultiProviderSequencer(bufferSize, waitStrategy);
+        MultiProducerSequencer sequencer = new MultiProducerSequencer(bufferSize, waitStrategy);
         return new RingQueue<>(factory, sequencer);
     }
 
     public static <E> RingQueue<E> createSingleProducer(EventFactory<E> factory, int bufferSize, WaitStrategy waitStrategy){
-        SingleProviderSequencer sequencer = new SingleProviderSequencer(bufferSize, waitStrategy);
+        SingleProducerSequencer sequencer = new SingleProducerSequencer(bufferSize, waitStrategy);
         return new RingQueue<>(factory, sequencer);
     }
 
