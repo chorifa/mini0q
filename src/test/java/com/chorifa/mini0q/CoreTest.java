@@ -7,6 +7,9 @@ import com.chorifa.mini0q.core.consumer.EventHandler;
 import com.chorifa.mini0q.core.event.EventFactory;
 import com.chorifa.mini0q.core.event.EventTranslator;
 import com.chorifa.mini0q.core.producer.ProducerType;
+import com.chorifa.mini0q.core.wait.AllBlockingWaitStrategy;
+import com.chorifa.mini0q.core.wait.BlockingWaitStrategy;
+import com.chorifa.mini0q.core.wait.LiteBlockingWaitStrategy;
 import com.chorifa.mini0q.utils.CoreException;
 import com.chorifa.mini0q.utils.Util;
 import org.junit.Test;
@@ -383,7 +386,7 @@ public class CoreTest {
      */
     @Test
     public void poolConsumerMultiProducer(){
-        RingQueueManager<Event> builder = RingQueueManager.createBuilder(new DefaultEventFactory<Event>(), inputSize)
+        RingQueueManager<Event> builder = RingQueueManager.createBuilder(new DefaultEventFactory<Event>(), inputSize, new BlockingWaitStrategy())
                 .handleEventInPoolWith(handler,10).getManager();
         RingQueue<Event> ringQueue = builder.get();
         Thread[] threads = new Thread[10];

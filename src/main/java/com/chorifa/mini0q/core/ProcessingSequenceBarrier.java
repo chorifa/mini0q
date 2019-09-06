@@ -28,9 +28,14 @@ public class ProcessingSequenceBarrier implements SequenceBarrier{
     @Override
     public long waitFor(long sequence) throws TimeoutException, InterruptedException, AlertException{
         checkAlert();
-        long available = waitStrategy.waitFor(sequence, providerCursor, dependentSequence, this);
+        long available = waitStrategy.waitForProducer(sequence, providerCursor, dependentSequence, this);
         if(available < sequence) return available;
         return provider.getHighestPublishedSequence(sequence, available);
+    }
+
+    @Override
+    public void notifyProducer() {
+        waitStrategy.signalAllProducerWhenBlocking();
     }
 
     public void alert(){

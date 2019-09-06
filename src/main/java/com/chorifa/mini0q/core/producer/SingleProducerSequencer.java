@@ -110,7 +110,7 @@ public class SingleProducerSequencer extends AbstractSequencer {
     @Override
     public void publish(long sequence) {
         cursor.volatileSet(sequence);
-        waitStrategy.signalAllWhenBlocking();
+        waitStrategy.signalAllConsumerWhenBlocking();
     }
 
     @Override

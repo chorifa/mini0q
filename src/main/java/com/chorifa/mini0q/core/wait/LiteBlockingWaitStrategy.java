@@ -3,10 +3,11 @@ package com.chorifa.mini0q.core.wait;
 import com.chorifa.mini0q.core.AtomicLong;
 import com.chorifa.mini0q.core.SequenceBarrier;
 import com.chorifa.mini0q.utils.AlertException;
-import com.chorifa.mini0q.utils.ThreadUtil;
 import com.chorifa.mini0q.utils.TimeoutException;
+import com.chorifa.mini0q.utils.Util;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.LockSupport;
 
 public class LiteBlockingWaitStrategy implements WaitStrategy{
 
@@ -26,7 +27,7 @@ public class LiteBlockingWaitStrategy implements WaitStrategy{
     }
 
     @Override
-    public long waitFor(long sequence, AtomicLong cursor, AtomicLong dependentSequence, SequenceBarrier barrier) throws InterruptedException, TimeoutException, AlertException {
+    public long waitForProducer(long sequence, AtomicLong cursor, AtomicLong dependentSequence, SequenceBarrier barrier) throws InterruptedException, TimeoutException, AlertException {
         long available; long start;
         if(cursor.get() < sequence){
             synchronized (lock){
@@ -52,12 +53,29 @@ public class LiteBlockingWaitStrategy implements WaitStrategy{
     }
 
     @Override
-    public void signalAllWhenBlocking() {
+    public void signalAllConsumerWhenBlocking() {
         if(needNotify.getAndSet(false)){
             synchronized (lock){
                 lock.notifyAll();
             }
         }
+    }
+
+    @Override
+    public long waitForConsumer(long expected, AtomicLong[] gates, long current, int times) {
+        long min = Util.getMinSequence(gates, current);
+        if(expected > min){
+            if(times < WaitStrategy.threshold)
+                LockSupport.parkNanos(2L);//WaitStrategy.Wait_Times[waitTimes]);
+            else
+                LockSupport.parkNanos(WaitStrategy.Wait_Times[times - WaitStrategy.threshold]);
+        }
+        return min;
+    }
+
+    @Override
+    public void signalAllProducerWhenBlocking() {
+        // do nothing
     }
 
 }

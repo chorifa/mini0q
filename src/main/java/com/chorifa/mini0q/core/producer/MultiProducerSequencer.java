@@ -84,12 +84,12 @@ public class MultiProducerSequencer extends AbstractSequencer {
     }
 
     @Override
-    public long next() {
+    public long next(){
         return this.next(1);
     }
 
     @Override
-    public long next(int n) {
+    public long next(int n){
         if(n < 1 || n > bufferSize)
             throw new IllegalArgumentException("MultiProviderSequencer: n must between 1 and buffer-size");
         long current;
@@ -103,6 +103,16 @@ public class MultiProducerSequencer extends AbstractSequencer {
             expectedValue = next -bufferSize;
             cachedGatingSequence = cachedMinConsumerPos.get();
             if(expectedValue > cachedGatingSequence || cachedGatingSequence > current){
+                try {
+                    cachedGatingSequence = waitStrategy.waitForConsumer(expectedValue, gatingSequences, current, waitTimes);
+                }catch (InterruptedException e){
+                    throw new CoreException("MultiProducerSequencer: wait for consumer occur interrupt.");
+                }
+                if(expectedValue <= cachedGatingSequence){ // wait ok
+                    cachedMinConsumerPos.lazySet(cachedGatingSequence); // lazySet
+                    waitTimes = 0;
+                }else if(waitTimes - WaitStrategy.threshold < WaitStrategy.Wait_Times.length - 1) waitTimes++;
+                /*
                 cachedGatingSequence = Util.getMinSequence(gatingSequences, current);
                 if(expectedValue > cachedGatingSequence){ // wait
                     if(waitTimes < WaitStrategy.threshold) {
@@ -119,7 +129,7 @@ public class MultiProducerSequencer extends AbstractSequencer {
                 }else {
                     cachedMinConsumerPos.lazySet(cachedGatingSequence); // lazySet
                     waitTimes = 0;
-                }
+                }*/
             }else if(cursor.compareAndSet(current, next)) break;
             else waitTimes = 0;
         }while (true);
@@ -146,14 +156,14 @@ public class MultiProducerSequencer extends AbstractSequencer {
     @Override
     public void publish(long sequence) {
         setAvailable(sequence);
-        waitStrategy.signalAllWhenBlocking();
+        waitStrategy.signalAllConsumerWhenBlocking();
     }
 
     @Override
     public void publish(long from, long to) {
         for(long l = from; l <= to; l++)
             setAvailable(l);
-        waitStrategy.signalAllWhenBlocking();
+        waitStrategy.signalAllConsumerWhenBlocking();
     }
 
     private void setAvailable(long sequence){

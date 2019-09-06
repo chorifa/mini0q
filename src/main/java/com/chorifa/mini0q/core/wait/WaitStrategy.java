@@ -10,8 +10,11 @@ public interface WaitStrategy {
 
     long[] Wait_Times = {4L, 16L, 128L, 256L, 512L, 1024L, 2048L, 2048L, 4096L, 4096L, 8192L, 16384L, 1000_1000L};
 
-    long waitFor(long sequence, AtomicLong cursor, AtomicLong dependentSequence, SequenceBarrier barrier) throws TimeoutException, InterruptedException, AlertException;
+    long waitForProducer(long sequence, AtomicLong cursor, AtomicLong dependentSequence, SequenceBarrier barrier) throws TimeoutException, InterruptedException, AlertException;
 
-    void signalAllWhenBlocking();
+    void signalAllConsumerWhenBlocking();
 
+    long waitForConsumer(long expected, AtomicLong[] gates, long current, int times) throws InterruptedException;
+
+    void signalAllProducerWhenBlocking();
 }

@@ -6,23 +6,26 @@ import com.chorifa.mini0q.utils.AlertException;
 import com.chorifa.mini0q.utils.TimeoutException;
 import com.chorifa.mini0q.utils.Util;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class BlockingWaitStrategy implements WaitStrategy {
+public class AllBlockingWaitStrategy implements WaitStrategy {
 
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition notEmpty = lock.newCondition();
+    private final Condition notFull = lock.newCondition();
+    private final AtomicBoolean pN = new AtomicBoolean(false);
+    private final AtomicBoolean cN = new AtomicBoolean(false);
     private final long timeoutInNanos;
     private final boolean allowTimeout;
 
-    public BlockingWaitStrategy(long timeoutInNanos) {
+    public AllBlockingWaitStrategy(long timeoutInNanos) {
         this.timeoutInNanos = timeoutInNanos;
         this.allowTimeout = true;
     }
 
-    public BlockingWaitStrategy() {
+    public AllBlockingWaitStrategy() {
         this.allowTimeout = false;
         this.timeoutInNanos = 1000*1000*1000; // 1s
     }
@@ -36,6 +39,8 @@ public class BlockingWaitStrategy implements WaitStrategy {
                 while (cursor.get() < sequence){
                     barrier.checkAlert();
 
+                    cN.set(true);
+                    if(cursor.get() >= sequence) break; // cas set may cost time
                     start = System.nanoTime();
                     notEmpty.awaitNanos(timeoutInNanos); // wait 1s , not timeout
                     if(allowTimeout && (System.nanoTime()-start) > timeoutInNanos)
@@ -56,29 +61,42 @@ public class BlockingWaitStrategy implements WaitStrategy {
 
     @Override
     public void signalAllConsumerWhenBlocking() {
-        try {
-            lock.lock();
-            notEmpty.signalAll();
-        }finally {
-            lock.unlock();
+        if(cN.getAndSet(false)) {
+            try {
+                lock.lock();
+                notEmpty.signalAll();
+            } finally {
+                lock.unlock();
+            }
         }
     }
 
     @Override
-    public long waitForConsumer(long expected, AtomicLong[] gates, long current, int times) {
+    public long waitForConsumer(long expected, AtomicLong[] gates, long current, int times) throws InterruptedException {
         long min = Util.getMinSequence(gates, current);
         if(expected > min){
-            if(times < WaitStrategy.threshold)
-                LockSupport.parkNanos(2L);//WaitStrategy.Wait_Times[waitTimes]);
-            else
-                LockSupport.parkNanos(WaitStrategy.Wait_Times[times - WaitStrategy.threshold]);
+            try{
+                lock.lock();
+                while (expected > (min = Util.getMinSequence(gates, current))){
+                    pN.set(true);
+                    notFull.awaitNanos(timeoutInNanos);
+                }
+            }finally {
+                lock.unlock();
+            }
         }
         return min;
     }
 
     @Override
     public void signalAllProducerWhenBlocking() {
-        // do nothing
+        if(pN.getAndSet(false)) {
+            try {
+                lock.lock();
+                notFull.signalAll();
+            } finally {
+                lock.unlock();
+            }
+        }
     }
-
 }

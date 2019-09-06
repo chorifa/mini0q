@@ -12,4 +12,6 @@ public interface SequenceBarrier {
     void checkAlert() throws AlertException;
 
     void alert();
+
+    void notifyProducer();
 }

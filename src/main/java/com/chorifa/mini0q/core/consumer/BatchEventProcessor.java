@@ -64,6 +64,7 @@ public class BatchEventProcessor<T> implements EventProcessor {
                         next++;
                     }
                     sequence.lazySet(available); // seen for provider
+                    barrier.notifyProducer(); // notify
                 }catch (AlertException e){
                     System.out.println("Consumer alert -> stop.");
                     break;

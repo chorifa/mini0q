@@ -65,13 +65,13 @@ public class ConcurrentEventProcessor<T> implements EventProcessor {
             long next = personalSequence.get();
             T event = null;
             /*TODO for test */
-            long startTime = -1, endTime = -1; long consume = 0;
-            try {
-                App.latch.await();
-                startTime = System.currentTimeMillis();
-            }catch (InterruptedException e){
-                System.err.println("consumer run error");
-            }
+//            long startTime = -1, endTime = -1; long consume = 0;
+//            try {
+//                App.latch.await();
+//                startTime = System.currentTimeMillis();
+//            }catch (InterruptedException e){
+//                System.err.println("consumer run error");
+//            }
             /* for test */
             while (running){
                 try{
@@ -81,14 +81,17 @@ public class ConcurrentEventProcessor<T> implements EventProcessor {
                             next = poolSequence.get()+1;
                             personalSequence.lazySet(next-1); // seen for producers
                         }while (!poolSequence.compareAndSet(next-1,next));
+
+                        // signal producer to produce
+                        barrier.notifyProducer();
                     }
                     if(cachedAvailable >= next){
                         event = provider.get(next);
                         eventHandler.onEvent(event,next);
 
                         /*TODO for test */
-                        consume++;
-                        endTime = System.currentTimeMillis();
+//                        consume++;
+//                        endTime = System.currentTimeMillis();
                         /* for test */
 
                         processed = true; // maybe rearrange the instruction.
@@ -97,12 +100,12 @@ public class ConcurrentEventProcessor<T> implements EventProcessor {
                     System.out.println("Consumer alert -> stop.");
 
                     /*TODO fot test */
-                    if(startTime > 0) {
-                        App.consumerTimeMap[num] = endTime - startTime;
-                        App.consumerCountMap[num] = consume;
-                        App.lastTimeConsumeMap[num] = endTime;
-                    }
-                    else System.out.println("Consumer "+num+" error start.");
+//                    if(startTime > 0) {
+//                        App.consumerTimeMap[num] = endTime - startTime;
+//                        App.consumerCountMap[num] = consume;
+//                        App.lastTimeConsumeMap[num] = endTime;
+//                    }
+//                    else System.out.println("Consumer "+num+" error start.");
                     /* fot test */
 
                     break;

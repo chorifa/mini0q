@@ -5,7 +5,9 @@ import com.chorifa.mini0q.builder.RingQueueManager;
 import com.chorifa.mini0q.core.consumer.EventHandler;
 import com.chorifa.mini0q.core.event.EventFactory;
 import com.chorifa.mini0q.core.event.EventTranslator;
+import com.chorifa.mini0q.core.wait.AllBlockingWaitStrategy;
 import com.chorifa.mini0q.core.wait.BlockingWaitStrategy;
+import com.chorifa.mini0q.core.wait.LiteBlockingWaitStrategy;
 import com.lmax.disruptor.WorkHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import org.junit.Test;
@@ -13,11 +15,15 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.locks.LockSupport;
 
 public class PerfTest {
 
     /**
+     * size 4096 ->
+     * 10 consumer, 10 producer * (1000*1000) >>> maxPeriod : 3490ms (both c or p)
+     * size 16384 ->
+     * 10 consumer, 10 producer * (1000*1000) >>> maxPeriod : 3238ms
+     * ----------------------------------------------------------------------------------
      * no rest
      * 10 consumer, 10 producer * (1000*100) >>>> maxPeriod : 608ms / 680ms (both c or p)
      * 10 consumer, 10 producer * (1000*1000) >>> maxPeriod : 7526ms (both c or p)
@@ -30,6 +36,7 @@ public class PerfTest {
      *  3 consumer,  1 producer * (1000*1000*10) >>> maxPeriod : 4800ms (both c or p)
      *
      *  30 consumer, 10 producer * (1000)   >>> maxPeriod : 52ms (both c or p)
+     *  100 consumer, 10 producer * (1000*100) >>> maxPeriod : 1970ms / 2410ms (both c or p)
      *  10 consumer, 100 producer * (1000*10) >>> maxPeriod : 1859ms (both c or p)
      *  10 consumer, 100 producer * (1000*100) >>> maxPeriod : 20617ms (both c or p)
      *  ----------------------------------------------------------------------------------
@@ -76,20 +83,91 @@ public class PerfTest {
     }
 
     /**
+     * size 4096 -> Blocking
+     * 10 consumer, 10 producer * (1000*1000) >>> maxPeriod : 1968ms both
+     * size 16384 -> Blocking
+     * 10 consumer, 10 producer * (1000*1000) >>> maxPeriod : 1972ms both
+     * -------------------------------------------------------------------------
      * no rest
-     * 10 consumer, 10 producer * (1000*100) >>>> maxPeriod : 750ms (both c or p)
-     * 10 consumer, 10 producer * (1000*1000) >>> maxPeriod : 6766ms (both c or p)
-     *  5 consumer,  5 producer * (1000*1000) >>> maxPeriod : 2286ms (both c or p)
-     *  3 consumer,  3 producer * (1000*1000) >>> maxPeriod : 699ms (both c or p)
-     *  2 consumer,  2 producer * (1000*1000) >>> maxPeriod : 416ms (both c or p)
-     *  1 consumer,  1 producer * (1000*1000) >>> maxPeriod : 161ms (both c or p)
-     *  1 consumer,  3 producer * (1000*1000) >>> maxPeriod : 577ms (both c or p)
-     *  3 consumer,  1 producer * (1000*1000) >>> maxPeriod : 234ms (both c or p)
-     *  3 consumer,  1 producer * (1000*1000*10) >>> maxPeriod : 2088ms (both c or p)
-     *
-     *  30 consumer, 10 producer * (1000)   >>> maxPeriod : 42ms (both c or p)
-     *  10 consumer, 100 producer * (1000*10) >>> maxPeriod : 1340ms (both c or p)
-     *  10 consumer, 100 producer * (1000*100) >>> maxPeriod : 13823ms (both c or p)
+     * 10 consumer, 10 producer * (1000*100) >>>> maxPeriod :
+     * BlockingWait
+     *  750ms (both c or p)
+     * LiteBlockingWait
+     *  318ms / 304ms (both c or p)
+     * ******************************************************
+     * 10 consumer, 10 producer * (1000*1000) >>> maxPeriod :
+     * BlockingWait
+     *  5307ms (both c or p)
+     * LiteBlockingWait
+     *  2349ms / 2333ms (both c or p)
+     * ******************************************************
+     *  5 consumer,  5 producer * (1000*1000) >>> maxPeriod :
+     *  BlockingWait
+     *   2286ms (both c or p)
+     *  LiteBlockingWait
+     *   761ms / 778ms (both c or p)
+     * ******************************************************
+     *  3 consumer,  3 producer * (1000*1000) >>> maxPeriod :
+     *  BlockingWait
+     *   699ms (both c or p)
+     *  LiteBlockingWait
+     *   311ms / 300ms (both c or p)
+     * ******************************************************
+     *  2 consumer,  2 producer * (1000*1000) >>> maxPeriod :
+     *  BlockingWait
+     *   416ms (both c or p)
+     *  LiteBlockingWait
+     *   205ms / 223ms (both c or p)
+     * ******************************************************
+     *  1 consumer,  1 producer * (1000*1000) >>> maxPeriod :
+     *  BlockingWait
+     *   161ms (both c or p)
+     *  LiteBlockingWait
+     *   102ms (both c or p)
+     * ******************************************************
+     *  1 consumer,  3 producer * (1000*1000) >>> maxPeriod :
+     *  BlockingWait
+     *   577ms (both c or p)
+     *  LiteBlockingWait
+     *   288ms / 291ms (both c or p)
+     * ******************************************************
+     *  3 consumer,  1 producer * (1000*1000) >>> maxPeriod :
+     *  BlockingWait
+     *   234ms (both c or p)
+     *  LiteBlockingWait
+     *   118ms / 136ms (both c or p)
+     * ******************************************************
+     *  3 consumer,  1 producer * (1000*1000*10) >>> maxPeriod :
+     *  BlockingWait
+     *   2088ms (both c or p)
+     *  LiteBlockingWait
+     *   858ms / 855ms (both c or p)
+     * ******************************************************
+     * IMPORTANT ---------------------------------- IMPORTANT
+     * ******************************************************
+     *  30 consumer, 10 producer * (1000)   >>> maxPeriod :
+     *  BlockingWait
+     *   42ms (both c or p)
+     *  LiteBlockingWait
+     *   57ms (both c or p)
+     * ******************************************************
+     *  100 consumer, 10 producer * (1000*100) >>> maxPeriod :
+     *  BlockingWait
+     *   3773ms / 3686ms / 6390 (c) 3671ms / 3686ms / 6388ms(p)
+     *  LiteBlockingWait
+     *   14212ms / 11445ms (c) 14210ms / 11444ms (p)
+     * ******************************************************
+     *  10 consumer, 100 producer * (1000*10) >>> maxPeriod :
+     *  BlockingWait
+     *   1340ms (both c or p)
+     *  LiteBlockingWait
+     *   456ms / 480ms (both c or p)
+     * ******************************************************
+     *  10 consumer, 100 producer * (1000*100) >>> maxPeriod :
+     *  BlockingWait
+     *   6049ms (both c or p)
+     *  LiteBlockingWait
+     *   3838ms / 3816ms (both c or p)
      *  ----------------------------------------------------------------------------------
      *  has rest (1us for each publish)
      *  10 consumer, 10 producer * (1000*1000) >>> maxPeriod : 56410ms / 54580ms (both c or p)
@@ -100,7 +178,7 @@ public class PerfTest {
      */
     @Test
     public void testRingQueueBlockingWait(){
-        RingQueueManager<Event> manager = RingQueueManager.createBuilder(factory,255, new BlockingWaitStrategy())
+        RingQueueManager<Event> manager = RingQueueManager.createBuilder(factory,255, new LiteBlockingWaitStrategy())
                                             .handleEventInPoolWith(handle, App.consumers).getManager();
         Thread[] producers = new Thread[App.producers];
         for(int i = 0; i < App.producers; i++)

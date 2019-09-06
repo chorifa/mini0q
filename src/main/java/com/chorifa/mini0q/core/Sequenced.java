@@ -10,9 +10,9 @@ public interface Sequenced {
 
     long remainingCapacity();
 
-    long next();
+    long next() ;
 
-    long next(int n);
+    long next(int n) ;
 
     long tryNext() throws CoreException;
 
