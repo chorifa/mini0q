@@ -1,6 +1,5 @@
 package com.chorifa.mini0q.core.consumer;
 
-import com.chorifa.mini0q.App;
 import com.chorifa.mini0q.core.AtomicLong;
 import com.chorifa.mini0q.core.DataProvider;
 import com.chorifa.mini0q.core.SequenceBarrier;
