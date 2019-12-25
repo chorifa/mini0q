@@ -5,7 +5,7 @@ Mini0q -- a RingQueue for producer-consumer model
 
 Features
 ---------------------------------------------
-- All CAS operations, No locks or synchronized(only in some kind of wait-strategys)  
+- All CAS operations, No locks or synchronized(only in some kind of wait-strategies)  
 - Easy to build complicated producer-consumer models
 
 Performance Test
@@ -21,6 +21,6 @@ ArrayBlockingQueue, Disruptor and Mini0q all apply size = 256. Each producer(p) 
 
 
 ### Note:
-- whole architecture refers to [disruptor](https://github.com/LMAX-Exchange/disruptor)  
-- only for study, not for business or engineering  
+- Whole architecture refers to [Disruptor](https://github.com/LMAX-Exchange/disruptor)  
+- Only for study, not for business or engineering  
 
