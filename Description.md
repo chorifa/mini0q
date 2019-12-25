@@ -31,7 +31,7 @@ Disruptor中生产者每次不够写入时都是park1ns，在生产者较多如1
 另外，由于生产者消费者的进度都是恒增的,对原子变量可以大量的使用lazyset,不一定要那么及时,最多就是生产者或者消费者多等一会。    
 ### Question Prediction
 - 和加锁的队列相比有什么优势
-- 在队列长度相对于读写总数不大时(256)，多个生产者,每个生产者连续不断地写入10^6个数据，多个消费者不断的拉去数据。 1c1p,3c1p,2c2p等都比ArrayBlockingQueue快,大约只要一半时间，同时使用Lite比Blocking还要更快一半时间以上。 10c10p以及更多的生产者时,Blocking模式和ArrayBlockingQueue时间相近,Lite模式仍要快一倍以上(但在消费者很多的时候会急剧恶化)。由于是RingQueue大小不大，很容易遇到等待的情况，因此等待策略对整体性能影响更大。如果队列较大，那CAS的优势要更大。    
+- 在队列长度相对于读写总数不大时(256)，多个生产者,每个生产者连续不断地写入10^6个数据，多个消费者不断的拉去数据。 1c1p,3c1p,2c2p等都比ArrayBlockingQueue快,大约只要一半时间，同时使用Lite比Blocking还要更快一半时间以上。 10c10p时,Blocking模式和ArrayBlockingQueue时间相近,Lite模式仍要快一倍以上(但在消费者很多的时候会急剧恶化)。当生产者远多于消费者时，要明显比BlockingQueue快，因为生产者不wait在lock上。由于是RingQueue大小不大，很容易遇到等待的情况，因此等待策略对整体性能影响更大。如果队列较大，那CAS的优势要更大。    
 
 - 内存栏栅和内存排序
 - JDK有Plain, volatile, release/acquire, opaque四种内存序。opaque仅保证最终可见性，plain就是普通读写，layset对应于setRelease，保证Release写前的读写不会重排到Release写后，对应的getAcquire能保证Acquire读之后的读写不会重排到Acquire读前，但是release/acquire不能保证可见性。volatile模式允许以volatile的方式读写变量，volatile写相当于Release barrier(禁止重排) -> 写变量 -> Store barrier(可见性)，volatile读相当于 Load barrier(可见性) -> 读变量 -> Acquire barrier(禁止重排)。

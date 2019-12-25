@@ -6,16 +6,14 @@ import com.chorifa.mini0q.utils.CoreException;
 import com.chorifa.mini0q.utils.Util;
 //import jdk.internal.vm.annotation.Contended;
 
-import java.util.concurrent.locks.LockSupport;
-
 public class SingleProducerSequencer extends AbstractSequencer {
 
-    private long p1,p2,p3,p4,p5,p6,p7;
+    public long p1,p2,p3,p4,p5,p6,p7;
     //@Contended(value = "pos")
     private long writePos = AtomicLong.INITIAL_VALUE;
     //@Contended(value = "pos")
     private long cachedMinConsumerPos = AtomicLong.INITIAL_VALUE;
-    private long p8,p9,p10,p11,p12,p13,p14;
+    public long p8,p9,p10,p11,p12,p13,p14;
 
     public SingleProducerSequencer(int bufferSize, WaitStrategy strategy) {
         super(bufferSize, strategy);
@@ -76,15 +74,24 @@ public class SingleProducerSequencer extends AbstractSequencer {
         // last time write in corresponding slot
         long expectedValue = nextPos - bufferSize;
         long cachedGatingSequence = this.cachedMinConsumerPos;
-        if(expectedValue > cachedGatingSequence || cachedGatingSequence > writePos){
+        int waitTimes = 0;
+        if(expectedValue > cachedGatingSequence || cachedGatingSequence > writePos) {
             // volatile set
             cursor.volatileSet(writePos);
+            do {
+                try {
+                    cachedGatingSequence = waitStrategy.waitForConsumer(expectedValue, gatingSequences, writePos, waitTimes);
+                } catch (InterruptedException e) {
+                    throw new CoreException("MultiProducerSequencer: wait for consumer occur interrupt.");
+                }
+            }while (expectedValue > cachedGatingSequence);
+            /*
             while (expectedValue > (cachedGatingSequence = Util.getMinSequence(gatingSequences, writePos))) {
                 LockSupport.parkNanos(2L);
                 // TODO for test, delete in future
                 if(Thread.interrupted())
                     throw new CoreException();
-            }
+            }*/
             this.cachedMinConsumerPos = cachedGatingSequence;
         }
         this.writePos = nextPos;

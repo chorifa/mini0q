@@ -244,7 +244,7 @@ public class CoreTest {
             try {
                 for(i = 0; i < 2499; i++){
                     //System.out.println("produce "+i);
-                    ringQueue.publishEvent(translator);
+                    builder.publishEvent(translator);
                     //LockSupport.parkNanos(1000*1000*1000);
                 }
             }catch (CoreException e){
@@ -386,11 +386,14 @@ public class CoreTest {
      */
     @Test
     public void poolConsumerMultiProducer(){
-        RingQueueManager<Event> builder = RingQueueManager.createBuilder(new DefaultEventFactory<Event>(), inputSize, new BlockingWaitStrategy())
+        RingQueueManager<Event> builder = RingQueueManager.createBuilder(new DefaultEventFactory<Event>(), inputSize,
+                null, ProducerType.SINGLE, new BlockingWaitStrategy())
                 .handleEventInPoolWith(handler,10).getManager();
+//        RingQueueManager<Event> builder = RingQueueManager.createBuilder(new DefaultEventFactory<Event>(), inputSize, new BlockingWaitStrategy())
+//                .handleEventInPoolWith(handler,10).getManager();
         RingQueue<Event> ringQueue = builder.get();
-        Thread[] threads = new Thread[10];
-        for(int i = 0; i < 10; i++) {
+        Thread[] threads = new Thread[1];
+        for(int i = 0; i < threads.length; i++) {
             threads[i] = new Thread(() -> {
                 int j = 0;
                 long start = System.currentTimeMillis();

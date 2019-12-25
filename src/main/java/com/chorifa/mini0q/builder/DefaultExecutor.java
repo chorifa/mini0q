@@ -1,6 +1,5 @@
 package com.chorifa.mini0q.builder;
 
-import com.chorifa.mini0q.utils.Assert;
 import com.chorifa.mini0q.utils.CoreException;
 
 import java.lang.management.ManagementFactory;
@@ -17,8 +16,7 @@ public class DefaultExecutor implements Executor {
     private final Queue<Thread> threads = new ConcurrentLinkedQueue<>();
 
     DefaultExecutor(ThreadFactory factory) {
-        Assert.notNull(factory);
-        this.factory = factory;
+        this.factory = factory == null ? DefaultThreadFactory.INSTANCE : factory;
     }
 
     // TODO change to lazy-singleton
@@ -32,6 +30,7 @@ public class DefaultExecutor implements Executor {
         final Thread thread = factory.newThread(command);
         if(thread == null)
             throw new CoreException("DefaultExecutor: cannot create a new thread.");
+        thread.setDaemon(true);
         thread.start();
         threads.add(thread);
     }

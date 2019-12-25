@@ -3,6 +3,7 @@ package com.chorifa.mini0q.core.wait;
 import com.chorifa.mini0q.core.AtomicLong;
 import com.chorifa.mini0q.core.SequenceBarrier;
 import com.chorifa.mini0q.utils.AlertException;
+import com.chorifa.mini0q.utils.CoreException;
 import com.chorifa.mini0q.utils.TimeoutException;
 import com.chorifa.mini0q.utils.Util;
 
@@ -67,8 +68,9 @@ public class LiteBlockingWaitStrategy implements WaitStrategy{
         if(expected > min){
             if(times < WaitStrategy.threshold)
                 LockSupport.parkNanos(2L);//WaitStrategy.Wait_Times[waitTimes]);
-            else
+            else if(times - WaitStrategy.threshold < WaitStrategy.Wait_Times.length)
                 LockSupport.parkNanos(WaitStrategy.Wait_Times[times - WaitStrategy.threshold]);
+            else throw new CoreException("Producer: Reject add event into RingQueue.");
         }
         return min;
     }
